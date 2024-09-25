@@ -9,3 +9,4 @@
 *.ko
 .temp_versions/
 *.cmd
+*.o.d
