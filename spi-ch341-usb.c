@@ -17,7 +17,7 @@
  */
 
 // uncomment following line to activate kernel debug handling
-// #define DEBUG
+//#define DEBUG
    #define DEBUG_PRINTK
 
 #ifdef DEBUG_PRINTK
@@ -65,7 +65,7 @@
   */
 #define CH341_POLL_PERIOD_MS        10    // see above
 
-#define CH341_GPIO_NUM_PINS         5     // Number of GPIO pins, DO NOT CHANGE
+#define CH341_GPIO_NUM_PINS         6     // Number of GPIO pins, DO NOT CHANGE
 
 #define CH341_USB_MAX_BULK_SIZE     32    // CH341A wMaxPacketSize for ep_02 and ep_82
 #define CH341_USB_MAX_INTR_SIZE     8     // CH341A wMaxPacketSize for ep_81
@@ -119,11 +119,12 @@ struct ch341_pin_config {
 struct ch341_pin_config ch341_board_config[CH341_GPIO_NUM_PINS] = 
 {
     // pin  GPIO mode           GPIO name   hwirq
-    {   15, CH341_PIN_MODE_CS , "cs0"     , 0 }, // used as CS0
-    {   16, CH341_PIN_MODE_CS , "cs1"     , 0 }, // used as CS1
-    {   17, CH341_PIN_MODE_CS , "cs2"     , 0 }, // used as CS2
-    {   19, CH341_PIN_MODE_IN , "gpio4"   , 1 }, // used as input with hardware IRQ
-    {   21, CH341_PIN_MODE_IN , "gpio5"   , 0 }  // used as input
+    {   15, CH341_PIN_MODE_OUT, "gpio0"    , 0 }, // used as CS0
+    {   16, CH341_PIN_MODE_OUT, "gpio1"    , 0 }, // used as CS1
+    {   17, CH341_PIN_MODE_CS, "cs2"       , 0 }, // used as CS2
+    {   18, CH341_PIN_MODE_OUT, "gpio3"    , 0 },
+    {   19, CH341_PIN_MODE_IN , "gpio4"    , 1 }, // used as input with hardware IRQ
+    {   21, CH341_PIN_MODE_IN , "gpio5"    , 0 }  // used as input
 };
 
 static struct spi_board_info ch341_spi_devices[CH341_SPI_MAX_NUM_DEVICES];
@@ -217,7 +218,7 @@ static int ch341_cfg_probe (struct ch341_device* ch341_dev)
         // --- check correct pin configuration ------------
             
         // is pin configurable at all
-        if (cfg->pin < 15 || (cfg->pin > 17 && cfg->pin != 19 && cfg->pin != 21))
+        if (cfg->pin < 15 || (cfg->pin > 18 && cfg->pin != 19 && cfg->pin != 21))
         {
             DEV_ERR(CH341_IF_ADDR, "pin %d: is not configurable", cfg->pin);
             return -EINVAL;
@@ -265,6 +266,7 @@ static int ch341_cfg_probe (struct ch341_device* ch341_dev)
                 case 15: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x01; break; // D0/CS0   (default OUT)
                 case 16: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x02; break; // D1/CS1   (default OUT)
                 case 17: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x04; break; // D2/CS2   (default OUT)
+                case 18: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x08; break; // D2/CS2   (default OUT)
                 case 19: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x10; break; // D4/DOUT2 (default OUT)
                 case 21: ch341_dev->gpio_bits[ch341_dev->gpio_num] = 0x40; break; // D6/DIN2  (default IN )
             }
@@ -797,7 +799,7 @@ static int ch341_irq_probe (struct ch341_device* ch341_dev)
 
     for (i = 0; i < ch341_dev->irq_num; i++)
     {
-        ch341_dev->irq_descs[i]   = irq_to_desc(ch341_dev->irq_base + i);
+//        ch341_dev->irq_descs[i]   = irq_to_desc(ch341_dev->irq_base + i);
         ch341_dev->irq_enabled[i] = false;
         
         irq_set_chip          (ch341_dev->irq_base + i, &ch341_dev->irq);
